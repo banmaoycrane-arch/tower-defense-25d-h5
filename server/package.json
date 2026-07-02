@@ -1,0 +1,14 @@
+{
+  "name": "tower-defense-server",
+  "private": true,
+  "version": "1.0.0",
+  "description": "3D塔防 — 阿里云轻量服务器后端（静态网页 + 排行榜API）",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

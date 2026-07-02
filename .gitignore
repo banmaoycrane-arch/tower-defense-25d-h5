@@ -1,0 +1,10 @@
+.vercel
+.netlify
+node_modules
+*.log
+.DS_Store
+Thumbs.db
+*.pem
+.env
+.env.*
+server/data/leaderboard.json

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0a0e17">
+  <meta name="description" content="2D塔防冒险 — 10关地图，手机浏览器可玩">
+  <link rel="manifest" href="manifest.json">
+  <title>2.5D 塔防 — 10关冒险</title>
+  <link rel="stylesheet" href="css/style.css?v=16">
+</head>
+<body>
+  <div id="game-container">
+    <canvas id="game-canvas"></canvas>
+
+    <div id="hud-top" class="hud-panel">
+      <div class="hud-group hud-primary">
+        <div class="stat"><span class="icon">🗺️</span>第 <span id="level">1</span> 关</div>
+        <div class="stat map-name" id="map-name">绿野初阵</div>
+        <div class="stat route-tag" id="route-info">1路1口</div>
+        <div class="stat diff-tag" id="difficulty-tag">普通</div>
+      </div>
+      <div class="hud-group hud-resources">
+        <div class="stat"><span class="icon">💰</span><span id="gold">200</span></div>
+        <div class="stat"><span class="icon">❤️</span><span id="lives">20</span></div>
+        <div class="stat"><span class="icon">🏆</span><span id="score">0</span></div>
+        <div class="stat"><span class="icon">🌊</span><span id="wave">0</span>/<span id="wave-max">3</span></div>
+        <div class="stat"><span class="icon">👾</span><span id="enemies-left">0</span></div>
+      </div>
+      <div class="hud-group hud-rotate">
+        <button id="view-rotate-left" class="icon-btn" type="button" title="左转 90°">↺</button>
+        <span id="view-face-label" class="view-face-tag" title="当前观察方位">↗</span>
+        <button id="view-rotate-right" class="icon-btn" type="button" title="右转 90°">↻</button>
+      </div>
+      <div class="hud-group hud-actions">
+        <button id="music-btn" class="icon-btn" title="背景音乐">🔇</button>
+        <button id="exit-btn" class="icon-btn exit" title="退出">✕</button>
+      </div>
+    </div>
+
+    <div id="hud-bottom" class="hud-panel">
+      <div class="hud-group hud-towers">
+      <div class="tower-btn selected" data-tower="archer">
+        <div class="tower-icon archer" aria-hidden="true">
+          <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path d="M12 24c0-8 24-8 24 0s-24 8-24 0" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="24" y1="13" x2="24" y2="35" stroke="currentColor" stroke-width="2"/><path d="M34 24h10M34 24l4-4M34 24l4 4" fill="none" stroke="#ffeb3b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="tower-name">弓箭塔</div>
+        <div class="tower-stat">⚔️15 · 射程5.0 · <b>⚡1.35/s</b></div>
+        <div class="tower-cost">55💰</div>
+      </div>
+      <div class="tower-btn" data-tower="cannon">
+        <div class="tower-icon cannon" aria-hidden="true">
+          <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><rect x="7" y="29" width="20" height="9" rx="2" fill="#78909c"/><circle cx="13" cy="27" r="5.5" fill="#ff7043"/><circle cx="13" cy="27" r="3" fill="#ffab40"/><rect x="24" y="25" width="17" height="7" rx="1.5" fill="#546e7a"/><rect x="38" y="26" width="6" height="5" rx="1" fill="#37474f"/></svg>
+        </div>
+        <div class="tower-name">火炮塔</div>
+        <div class="tower-stat">⚔️38 · 射程4.2 · <b>⚡0.72/s</b></div>
+        <div class="tower-cost">115💰</div>
+      </div>
+      <div class="tower-btn" data-tower="frost">
+        <div class="tower-icon frost" aria-hidden="true">
+          <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><g stroke="#80deea" stroke-width="2.2" stroke-linecap="round"><line x1="24" y1="8" x2="24" y2="40"/><line x1="8" y1="24" x2="40" y2="24"/><line x1="12.7" y1="12.7" x2="35.3" y2="35.3"/><line x1="35.3" y1="12.7" x2="12.7" y2="35.3"/></g><circle cx="24" cy="24" r="4" fill="#4fc3f7"/></svg>
+        </div>
+        <div class="tower-name">冰冻塔</div>
+        <div class="tower-stat">⚔️11 · 射程4.6 · <b>⚡1.0/s</b></div>
+        <div class="tower-cost">70💰</div>
+      </div>
+      </div>
+      <div class="hud-group hud-controls">
+      <button id="start-wave-btn" class="action-btn"><span class="lbl-full">开始下一波</span><span class="lbl-short">下一波</span></button>
+      <button id="speed-btn" class="action-btn secondary"><span class="lbl-full">⏩ 加速</span><span class="lbl-short">⏩</span></button>
+      <button id="music-cycle-btn" class="action-btn secondary" title="切换曲目"><span class="lbl-full">🎵 <span id="music-label">—</span></span><span class="lbl-short">🎵</span></button>
+      </div>
+    </div>
+    <p id="wave-gap-hint" class="wave-gap-hint hidden"></p>
+
+    <!-- 开始界面 -->
+    <div id="start-screen" class="overlay overlay-start">
+      <div class="overlay-scroll">
+      <div class="overlay-content wide">
+        <h1>🏰 2.5D 塔防</h1>
+        <p class="subtitle"><span class="sub-full">10 大关 · 固定斜俯视角 · 点选放塔 · 排行榜</span><span class="sub-short">10关 · 2.5D · 排行榜</span></p>
+        <div class="name-row">
+          <label for="player-phone">手机号登录</label>
+          <input id="player-phone" type="tel" maxlength="11" inputmode="numeric" placeholder="11位手机号">
+        </div>
+        <p class="phone-hint">排行榜显示为 138****5678，保护您的隐私</p>
+        <div class="difficulty-section">
+          <p class="difficulty-label">选择难度</p>
+          <div id="difficulty-btns" class="difficulty-btns"></div>
+          <p id="difficulty-desc" class="difficulty-desc">普通：标准体验，适合大多数玩家</p>
+        </div>
+        <ul class="tips">
+          <li>🔍 <b>双指捏合 / 滚轮</b>缩放；<b>↺ ↻</b>切换四个固定观察面（俯仰不变）</li>
+          <li>⛰️ <b>高台塔位射程 +1</b>（带金色标记），低地无加成</li>
+          <li>🏹 弓箭远射 · 💣 火炮范围伤 · ❄️ 冰冻减速 45%</li>
+          <li>🔧 <b>波次间隙</b>可点击已有塔拆除，退还 50% 金币</li>
+          <li>🛤️ 关卡含<b>多入口/多出口</b>路线，需分兵防守</li>
+          <li>👾 可爱史莱姆：普通(红) / 快速(橙耳) / 坦克(紫甲)</li>
+          <li>🎵 6 种背景音乐，随关卡自动切换</li>
+        </ul>
+        <div class="leaderboard-box">
+          <h2>🏆 得分排行榜（网页+微信共用）</h2>
+          <div class="leaderboard-head">
+            <span>排名</span><span>手机号</span><span>分数</span><span>版本</span>
+          </div>
+          <ul id="leaderboard-list-start" class="leaderboard"></ul>
+        </div>
+      </div>
+      </div>
+      <div class="start-footer">
+        <p id="login-hint" class="login-hint"></p>
+        <button id="play-btn" class="action-btn large" type="button">开始冒险</button>
+      </div>
+    </div>
+
+    <!-- 中途退出确认 -->
+    <div id="exit-screen" class="overlay hidden">
+      <div class="overlay-content">
+        <h1>⏸️ 退出游戏？</h1>
+        <p id="exit-score-preview" class="reward-text">当前得分：0 分</p>
+        <p>退出后本局得分将保存到排行榜</p>
+        <div class="btn-row">
+          <button id="cancel-exit-btn" class="action-btn secondary">继续游戏</button>
+          <button id="confirm-exit-btn" class="action-btn">确认退出</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 关卡通关 -->
+    <div id="level-clear-screen" class="overlay hidden">
+      <div class="overlay-content">
+        <h1 id="level-clear-title">🎊 关卡通关！</h1>
+        <p id="level-clear-desc"></p>
+        <p id="level-clear-reward" class="reward-text"></p>
+        <button id="next-level-btn" class="action-btn large">进入下一关</button>
+      </div>
+    </div>
+
+    <!-- 失败 -->
+    <div id="gameover-screen" class="overlay hidden">
+      <div class="overlay-content">
+        <h1 id="result-title">💀 基地被攻破</h1>
+        <p id="result-desc"></p>
+        <div class="leaderboard-box compact">
+          <h2>🏆 排行榜</h2>
+          <div class="leaderboard-head">
+            <span>排名</span><span>手机号</span><span>分数</span><span>版本</span>
+          </div>
+          <ul id="leaderboard-list" class="leaderboard"></ul>
+        </div>
+        <button id="restart-btn" class="action-btn large">重新再来</button>
+      </div>
+    </div>
+
+    <!-- 最终通关 -->
+    <div id="victory-screen" class="overlay hidden">
+      <div class="overlay-content wide">
+        <h1>🎉 全通关！王国得救了！</h1>
+        <p id="victory-stats" class="subtitle"></p>
+        <div class="leaderboard-box compact">
+          <h2>🏆 排行榜</h2>
+          <div class="leaderboard-head">
+            <span>排名</span><span>手机号</span><span>分数</span><span>版本</span>
+          </div>
+          <ul id="leaderboard-list-victory" class="leaderboard"></ul>
+        </div>
+        <div class="credits-box">
+          <h2>🙏 感谢名单</h2>
+          <ul id="credits-list" class="credits"></ul>
+        </div>
+        <button id="play-again-btn" class="action-btn large">重新再来</button>
+      </div>
+    </div>
+    <div id="combat-text-layer" aria-hidden="true"></div>
+
+    <!-- 浏览器不兼容提示（UC / 小米等） -->
+    <div id="compat-error" class="overlay compat-error hidden">
+      <div class="overlay-content">
+        <h1>⚠️ 无法打开游戏</h1>
+        <p id="compat-error-msg" class="reward-text">页面加载失败</p>
+        <p id="compat-error-detail" class="compat-detail"></p>
+        <ul class="compat-tips">
+          <li>推荐用 <b>Chrome</b> 或 <b>Safari</b> 打开链接</li>
+          <li>UC / 小米浏览器请关闭「极速模式」「省流模式」</li>
+          <li>2D 版无需 3D 加速，普通手机即可流畅运行</li>
+          <li>仍不行请复制链接到微信里用「在浏览器打开」</li>
+        </ul>
+        <button type="button" class="action-btn large" onclick="location.reload()">刷新重试</button>
+      </div>
+    </div>
+  </div>
+  <script src="js/compat.js?v=10"></script>
+</body>
+</html>

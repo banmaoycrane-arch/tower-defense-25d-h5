@@ -1,0 +1,11 @@
+{
+  "name": "3D 塔防冒险",
+  "short_name": "塔防3D",
+  "description": "10关3D塔防，手机浏览器可玩",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#0a0e17",
+  "theme_color": "#0a0e17",
+  "lang": "zh-CN"
+}
