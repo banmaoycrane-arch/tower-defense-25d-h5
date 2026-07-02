@@ -22,6 +22,36 @@
   var CAM_HEIGHT = 46;
   var CAM_YAW_BASE = Math.PI / 4;
   var viewFace = 0;
+  var panOffset = { x: 0, z: 0 };
+  var PAN_LIMIT = 24;
+
+  function clampPan() {
+    panOffset.x = Math.max(-PAN_LIMIT, Math.min(PAN_LIMIT, panOffset.x));
+    panOffset.z = Math.max(-PAN_LIMIT, Math.min(PAN_LIMIT, panOffset.z));
+  }
+
+  function resetPan() {
+    panOffset.x = 0;
+    panOffset.z = 0;
+    updateCamera();
+  }
+
+  function panByScreenDelta(dx, dy) {
+    if (!camera || !canvas) return;
+    var h = canvas.clientHeight || global.innerHeight || 1;
+    var scale = ((camera.top - camera.bottom) / h) * 0.92;
+    var right = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 0);
+    right.y = 0;
+    if (right.lengthSq() > 1e-6) right.normalize();
+    var forward = new THREE.Vector3();
+    camera.getWorldDirection(forward);
+    forward.y = 0;
+    if (forward.lengthSq() > 1e-6) forward.normalize();
+    panOffset.x += right.x * (-dx * scale) + forward.x * (dy * scale);
+    panOffset.z += right.z * (-dx * scale) + forward.z * (dy * scale);
+    clampPan();
+    updateCamera();
+  }
 
   function applyViewFace() {
     var yaw = CAM_YAW_BASE + viewFace * (Math.PI / 2);
@@ -85,7 +115,8 @@
   }
 
   function updateCamera() {
-    camera.position.copy(CAM.pos);
+    CAM.target.set(panOffset.x, 0, panOffset.z);
+    camera.position.set(CAM.pos.x + panOffset.x, CAM.pos.y, CAM.pos.z + panOffset.z);
     camera.lookAt(CAM.target);
   }
 
@@ -96,8 +127,6 @@
     var a = w / h;
     var half = orthoHalf * zoom;
     camera = new THREE.OrthographicCamera(-half * a, half * a, half, -half, 0.1, 200);
-    camera.position.copy(CAM.pos);
-    camera.lookAt(CAM.target);
     renderer.setSize(w, h);
     updateCamera();
   }
@@ -641,6 +670,8 @@
     rotateView: rotateView,
     setViewFace: setViewFace,
     getViewFace: getViewFace,
+    panByScreenDelta: panByScreenDelta,
+    resetPan: resetPan,
     setTheme: setTheme,
     enrichTheme: enrichTheme,
     clearMap: clearMap,

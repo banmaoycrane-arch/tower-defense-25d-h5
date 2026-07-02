@@ -126,6 +126,7 @@ function drawRouteSegments(points, pathColor) {
 }
 
 function loadLevel(levelIndex) {
+  if (window.Render3D && Render3D.resetPan) Render3D.resetPan();
   clearMap();
   state.currentLevel = levelIndex;
   var lv = getLevel();
@@ -747,7 +748,43 @@ function animate(time) {
 
 window.addEventListener('resize', function () { Render3D.resize(); });
 
-canvas.addEventListener('mousemove', function (e) { updateHoverAt(e.clientX, e.clientY); });
+var dragState = { down: false, moved: false, lastX: 0, lastY: 0 };
+var PAN_DRAG_THRESHOLD = 8;
+
+canvas.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+  if (e.button !== 0 && e.button !== 1 && e.button !== 2) return;
+  dragState.down = true;
+  dragState.moved = false;
+  dragState.lastX = e.clientX;
+  dragState.lastY = e.clientY;
+});
+
+canvas.addEventListener('mousemove', function (e) {
+  if (dragState.down) {
+    var dx = e.clientX - dragState.lastX;
+    var dy = e.clientY - dragState.lastY;
+    if (!dragState.moved && Math.hypot(dx, dy) > PAN_DRAG_THRESHOLD) dragState.moved = true;
+    if (dragState.moved) {
+      Render3D.panByScreenDelta(dx, dy);
+      dragState.lastX = e.clientX;
+      dragState.lastY = e.clientY;
+      return;
+    }
+  }
+  updateHoverAt(e.clientX, e.clientY);
+});
+
+canvas.addEventListener('mouseup', function (e) {
+  if (dragState.down && !dragState.moved && e.button === 0) onClick();
+  dragState.down = false;
+  dragState.moved = false;
+});
+
+canvas.addEventListener('mouseleave', function () {
+  dragState.down = false;
+  dragState.moved = false;
+});
+
 var VIEW_FACE_LABELS = ['↗ 东北', '↘ 东南', '↙ 西南', '↖ 西北'];
 
 function updateViewFaceLabel() {
@@ -788,10 +825,8 @@ function bindViewRotate() {
 
 bindViewRotate();
 
-canvas.addEventListener('click', onClick);
-
-/* 固定 2.5D 视角：可缩放，不可旋转 */
-var touchState = { start: null, moved: false, pinch: 0 };
+/* 缩放后可拖拽平移；轻点/单击放塔 */
+var touchState = { start: null, moved: false, pinch: 0, lastX: 0, lastY: 0 };
 
 canvas.addEventListener('wheel', function (e) {
   e.preventDefault();
@@ -817,8 +852,22 @@ canvas.addEventListener('touchstart', function (e) {
 canvas.addEventListener('touchmove', function (e) {
   if (e.touches.length === 1 && touchState.start) {
     var t = e.touches[0];
-    if (Math.hypot(t.clientX - touchState.start.x, t.clientY - touchState.start.y) > 10) touchState.moved = true;
-    else updateHoverAt(t.clientX, t.clientY);
+    var dx = t.clientX - touchState.start.x;
+    var dy = t.clientY - touchState.start.y;
+    if (!touchState.moved && Math.hypot(dx, dy) > PAN_DRAG_THRESHOLD) {
+      touchState.moved = true;
+      touchState.lastX = t.clientX;
+      touchState.lastY = t.clientY;
+    }
+    if (touchState.moved) {
+      var pdx = t.clientX - touchState.lastX;
+      var pdy = t.clientY - touchState.lastY;
+      Render3D.panByScreenDelta(pdx, pdy);
+      touchState.lastX = t.clientX;
+      touchState.lastY = t.clientY;
+    } else {
+      updateHoverAt(t.clientX, t.clientY);
+    }
   } else if (e.touches.length === 2 && touchState.pinch > 0) {
     var dx = e.touches[0].clientX - e.touches[1].clientX;
     var dy = e.touches[0].clientY - e.touches[1].clientY;

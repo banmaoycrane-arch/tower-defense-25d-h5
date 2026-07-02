@@ -55,8 +55,8 @@
     'js/audio.js',
     'js/maps.js',
     'js/build-spots.js?v=2',
-    'js/render3d.js?v=7',
-    'js/game.js?v=16',
+    'js/render3d.js?v=8',
+    'js/game.js?v=17',
   ];
 
   function loadScript(src, cb) {
