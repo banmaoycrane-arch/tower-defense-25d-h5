@@ -56,7 +56,7 @@
     'js/maps.js',
     'js/build-spots.js?v=2',
     'js/render3d.js?v=8',
-    'js/game.js?v=17',
+    'js/game.js?v=18',
   ];
 
   function loadScript(src, cb) {

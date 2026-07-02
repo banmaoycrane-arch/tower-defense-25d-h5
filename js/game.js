@@ -752,6 +752,8 @@ var dragState = { down: false, moved: false, lastX: 0, lastY: 0 };
 var PAN_DRAG_THRESHOLD = 8;
 
 canvas.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+
+canvas.addEventListener('mousedown', function (e) {
   if (e.button !== 0 && e.button !== 1 && e.button !== 2) return;
   dragState.down = true;
   dragState.moved = false;
